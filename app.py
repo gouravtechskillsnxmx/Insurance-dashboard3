@@ -1,16 +1,22 @@
-from dotenv import load_dotenv
-import os
-from twilio.rest import Client
+elif tab == "Send Test Message":
+    phone = st.text_input("Phone for test (with country code)", value="")
+    msg = st.text_area(
+        "Message",
+        value="Reminder: your policy is due soon. Contact your agent."
+    )
 
-load_dotenv()  # load from .env
+    if st.button("Send"):
+        try:
+            sid = reminders.send_test_message(phone, msg)
 
-TW_SID = os.getenv("TWILIO_SID")
-TW_TOKEN = os.getenv("TWILIO_TOKEN")
-TW_FROM = os.getenv("TWILIO_WHATSAPP_FROM")
+            if sid == "SIMULATED-SEND":
+                st.warning(f"[SIMULATION MODE] Would send to {phone}: {msg}")
+            elif sid and sid.startswith("SM"):
+                st.success(f"✅ Sent via Twilio (SID: {sid})")
+            elif sid:
+                st.info(f"Message sent with SID: {sid}")
+            else:
+                st.error("❌ Failed to send. Check Twilio logs or credentials.")
 
-def send_whatsapp(to_number, message):
-    if not (TW_SID and TW_TOKEN and TW_FROM):
-        raise RuntimeError("Twilio credentials not set")
-    client = Client(TW_SID, TW_TOKEN)
-    msg = client.messages.create(body=message, from_=TW_FROM, to=f'whatsapp:{to_number}')
-    return msg.sid
+        except Exception as e:
+            st.error(f"Send failed: {e}")
